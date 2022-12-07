@@ -46,13 +46,12 @@ def file(match, current_node: Node):
         current_node.add_child(new_node)
     return current_node
 
-patterns=[r"\$ ls", r"dir (.+)", r"\$ cd (.+)", r"(\d+) (.+)"]
-functions=[ls, dir, cd, file]
+patterns={r"\$ ls": ls, r"dir (.+)": dir, r"\$ cd (.+)": cd, r"(\d+) (.+)": file}
 
 lines = open("../inputs/day_7.txt", "r").read().splitlines()
 current_node = Node(None, "/", 0)
 for line in lines[1:]:
-    for pattern, case in zip(patterns, functions):
+    for pattern, case in patterns.items():
         match = re.compile(pattern).match(line)
         current_node = case(match, current_node)
 
@@ -76,3 +75,12 @@ def second_part(accum, total, is_dir):
 
 total_size, accum2 = current_node.get_accum(accum_func=second_part, accum=total_disc_space)
 print(accum2)
+
+
+input = "dfsfdfdf"
+
+switch (input):
+    case regex1:
+        temp = ...
+    case regex2:
+        temp = ...
