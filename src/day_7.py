@@ -12,39 +12,13 @@ class Node:
     def add_child(self, child: "Node"):
         self.children[child.name] = child
 
-    def total_size(self):
-        result = 0
-        for c in self.children.values():
-            result = result + c.total_size()
-        total = result + self.size
-        self.total = total
-        return total
-
-    def print(self, level):
-        type = 'dir' if len(self.children) > 0 else 'file'
-        print(' ' * level + f"- {self.name} ({type}) {self.total_size()}")
-        for c in self.children.values():
-            c.print(level + 1)
-
-    def total_size_accum(self, accum):
+    def get_accum(self, accum_func, accum):
         total = 0
         for c in self.children.values():
-            result, accum = c.total_size_accum(accum)
+            result, accum = c.get_accum(accum_func, accum)
             total = total + result
         total = total + self.size
-        if total <= 100000 and len(self.children.values()) > 0:
-            accum.append(total)
-        return total, accum
-
-    def total_size_accum_2(self, accum):
-        total = 0
-        for c in self.children.values():
-            result, accum = c.total_size_accum_2(accum)
-            total = total + result
-        total = total + self.size
-        if len(self.children.values()) > 0 and 2805968 < total < accum:
-            accum = total
-        return total, accum
+        return total, accum_func(accum, total, is_dir = len(self.children) > 0)
 
 def ls(match, current_node):
     return current_node
@@ -85,18 +59,20 @@ for line in lines[1:]:
 while current_node.parent is not None:
     current_node = current_node.parent
 
-print(current_node.total_size()) #48381165
+def first_part(accum, total, is_dir):
+    return accum + total if total <= 100000 and is_dir else accum
 
-# current_node.print(0)
-total_size, accum = current_node.total_size_accum([])
+total_size, accum = current_node.get_accum(accum_func=first_part, accum=0)
 print(accum)
-print(sum(accum))
 
 total_disc_space = 70000000
 space_for_update = 30000000
 
-free_space = total_disc_space - current_node.total_size()
+free_space = total_disc_space - total_size
 need_to_free = space_for_update - free_space
-print(need_to_free)
-total, accum2 = current_node.total_size_accum_2(total_disc_space)
+
+def second_part(accum, total, is_dir):
+    return total if is_dir and need_to_free < total < accum else accum
+
+total_size, accum2 = current_node.get_accum(accum_func=second_part, accum=total_disc_space)
 print(accum2)
