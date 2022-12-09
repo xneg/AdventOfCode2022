@@ -75,12 +75,3 @@ def second_part(accum, total, is_dir):
 
 total_size, accum2 = current_node.get_accum(accum_func=second_part, accum=total_disc_space)
 print(accum2)
-
-
-input = "dfsfdfdf"
-
-switch (input):
-    case regex1:
-        temp = ...
-    case regex2:
-        temp = ...
