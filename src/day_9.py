@@ -31,7 +31,7 @@ def calculate_movement(particles, input):
     path = []
     for line in input:
         direction, distance = line.split(' ')
-        for i in range(int(distance)):
+        for _ in range(int(distance)):
             particles[0].move(*Particle.directions[direction])
             for idx, p in enumerate(particles[1:]):
                 direction = p.direction(particles[idx])
