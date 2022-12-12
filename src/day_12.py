@@ -13,11 +13,17 @@ class PriorityQueue:
         value, priority = self.queue.pop()
         return value
 
+def map_letter(l):
+    letter_map = {'S': 'a', 'E': 'z'}
+    if l in letter_map:
+        return ord(letter_map[l])
+    return ord(l)
+
 def comparison_part_one(current, neighbor):
-    return neighbor - current > 1
+    return map_letter(neighbor) - map_letter(current) > 1
 
 def comparison_part_two(current, neighbor):
-    return current > neighbor + 1
+    return map_letter(current) > map_letter(neighbor) + 1
 
 def neighbors(current, field, comparison_func):
     result = []
@@ -33,6 +39,7 @@ def neighbors(current, field, comparison_func):
             continue
         result.append(node_position)
     return result
+
 def dijkstra_search(field, start, goal_func, comparison_func):
     frontier = PriorityQueue([(start, 0)])
     came_from = {}
@@ -58,18 +65,13 @@ def dijkstra_search(field, start, goal_func, comparison_func):
 
 lines = open("../inputs/day_12.txt", "r").read().splitlines()
 
-field = []
-for line in lines:
-    field.append([ord(c) for c in line])
+field = [[*line] for line in lines]
 
-start = [(idx, row.index(ord('S'))) for idx, row in enumerate(field) if ord('S') in row][0]
-end =   [(idx, row.index(ord('E'))) for idx, row in enumerate(field) if ord('E') in row][0]
-
-field[start[0]][start[1]] = ord('a')
-field[end[0]][end[1]] = ord('z')
+start = [(idx, row.index('S')) for idx, row in enumerate(field) if 'S' in row][0]
+end =   [(idx, row.index('E')) for idx, row in enumerate(field) if 'E' in row][0]
 
 path_one = dijkstra_search(field, start, lambda x: x == end, comparison_part_one)
 print(path_one[1][end])
 
-path_two = dijkstra_search(field, end, lambda x: field[x[0]][x[1]] == ord('a'), comparison_part_two)
-print(min({value for key, value in path_two[1].items() if field[key[0]][key[1]] == ord('a')}))
+path_two = dijkstra_search(field, end, lambda x: field[x[0]][x[1]] == 'a', comparison_part_two)
+print(min({value for key, value in path_two[1].items() if field[key[0]][key[1]] == 'a'}))
