@@ -2,12 +2,8 @@ class PriorityQueue:
     def __init__(self, queue):
         self.queue = queue
 
-    def empty(self):
-        return len(self.queue) == 0
-
     def add(self, element):
-        self.queue.append(element)
-        self.queue = sorted(self.queue, key=lambda x: x[1], reverse=True)
+        self.queue = sorted(self.queue + [element], key=lambda x: x[1], reverse=True)
 
     def pop(self):
         value, priority = self.queue.pop()
@@ -43,11 +39,10 @@ def neighbors(current, field, comparison_func):
 def dijkstra_search(field, start, goal_func, comparison_func):
     frontier = PriorityQueue([(start, 0)])
     came_from = {}
-    cost_so_far = {}
+    cost_so_far = {start: 0}
     came_from[start] = None
-    cost_so_far[start] = 0
 
-    while not frontier.empty():
+    while len(frontier.queue) > 0:
         current = frontier.pop()
 
         if goal_func(current):
