@@ -34,30 +34,14 @@ class RockPath:
         return result
 
 
-lines = open("../inputs/day_14_test.txt", "r").read().splitlines()
-rock_paths = []
-for line in lines:
-    rock_paths.append(RockPath([list(map(int, position.split(","))) for position in line.split(" -> ")]))
-
-min_x = min([path.min_x() for path in rock_paths])
-max_x = max([path.max_x() for path in rock_paths])
-min_y = 0
-max_y = max([path.max_y() for path in rock_paths])
-
-rock_points = set.union(*[path.path() for path in rock_paths])
-sand_source = Point(500 - min_x + 1, 0)
-
-field = [['.' for _ in range(max_x - min_x + 3) ] for _ in range(max_y - min_y + 1)]
-for point in rock_points:
-    field[point.y - min_y][point.x - min_x + 1] = '#'
-
-field[sand_source.y][sand_source.x] = '+'
-
-
-def sand_move():
+def sand_move(field):
     sand_position = Point(sand_source.x, sand_source.y)
+    if field[sand_position.y][sand_position.x] == 'o':
+        return False
     while True:
         new_pos = Point(sand_position.x, sand_position.y + 1)
+        if new_pos.y == len(field):
+            return False
         if field[new_pos.y][new_pos.x] == '.':
             sand_position = new_pos
             continue
@@ -71,12 +55,55 @@ def sand_move():
             continue
         break
     field[sand_position.y][sand_position.x] = 'o'
+    return True
+
+lines = open("../inputs/day_14.txt", "r").read().splitlines()
+rock_paths = []
+for line in lines:
+    rock_paths.append(RockPath([list(map(int, position.split(","))) for position in line.split(" -> ")]))
+
+min_x = min([path.min_x() for path in rock_paths])
+max_x = max([path.max_x() for path in rock_paths])
+min_y = 0
+max_y = max([path.max_y() for path in rock_paths])
+
+rock_points = set.union(*[path.path() for path in rock_paths])
+sand_source = Point(500 - min_x + 1, 0)
+
+# part I
+field = [['.' for _ in range(max_x - min_x + 3) ] for _ in range(max_y - min_y + 2)]
+for point in rock_points:
+    field[point.y - min_y][point.x - min_x + 1] = '#'
+
+field[sand_source.y][sand_source.x] = '+'
 
 
-# for i in range(0, 24):
-#     sand_move()
+result = 0
+while sand_move(field):
+    result = result + 1
 
+print(result)
+# for row in field:
+#     print(''.join(row))
+
+# part II
+
+height = max_y - min_y + 3
+width = max_x - min_x + 2 * (height+2)
+sand_source = Point(500 - min_x + width // 2 - (max_x - min_x) // 2, 0)
+field = [['.' for _ in range(width) ] for _ in range(height)]
+for point in rock_points:
+    field[point.y - min_y][point.x - min_x + width // 2 - (max_x - min_x) // 2] = '#'
+
+for idx, _ in enumerate(field[-1]):
+    field[-1][idx] = '#'
+
+field[sand_source.y][sand_source.x] = '+'
+
+result = 0
+while sand_move(field):
+    result = result + 1
+
+print(result)
 for row in field:
     print(''.join(row))
-
-# sand_move()
