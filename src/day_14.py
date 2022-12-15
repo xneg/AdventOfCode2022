@@ -89,16 +89,19 @@ print(result)
 # part II
 
 height = max_y - min_y + 3
-width = max_x - min_x + 2 * (height+2)
-sand_source = Point(500 - min_x + width // 2 - (max_x - min_x) // 2, 0)
+width = max_x - min_x + 2 * height
+sand_source = Point(500 - min_x + height, 0)
 field = [['.' for _ in range(width) ] for _ in range(height)]
 for point in rock_points:
-    field[point.y - min_y][point.x - min_x + width // 2 - (max_x - min_x) // 2] = '#'
+    field[point.y - min_y][point.x - min_x + height] = '#'
 
 for idx, _ in enumerate(field[-1]):
     field[-1][idx] = '#'
 
 field[sand_source.y][sand_source.x] = '+'
+
+for row in field:
+    print(''.join(row))
 
 result = 0
 while sand_move(field):
