@@ -1,13 +1,5 @@
-class PriorityQueue:
-    def __init__(self, queue):
-        self.queue = queue
+from src.utils import PriorityQueue
 
-    def add(self, element):
-        self.queue = sorted(self.queue + [element], key=lambda x: x[1], reverse=True)
-
-    def pop(self):
-        value, priority = self.queue.pop()
-        return value
 
 def map_letter(l):
     letter_map = {'S': 'a', 'E': 'z'}
