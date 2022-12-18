@@ -36,8 +36,7 @@ def calculate_height(input, limit, find_period=False):
     command_index = 0
     figures_count = 0
     shape_command_set = {}
-    while figures_count < limit:
-
+    while figures_count < limit or find_period:
         if current_figure is None:
             current_top = max(point[1] for point in chamber) + 1 if len(chamber) > 0 else 0
             current_figure = Figure(shape_index, chamber, current_top)
@@ -48,7 +47,6 @@ def calculate_height(input, limit, find_period=False):
                     shape_command_set[(shape_index, command_index)] = figures_count, current_top
                 else:
                     initial, initial_top = shape_command_set[(shape_index, command_index)]
-
                     return initial, initial_top, figures_count - initial, current_top - initial_top
         success, new_shape = current_figure.move(input[command_index])
         if success:
@@ -70,13 +68,15 @@ def calculate_height(input, limit, find_period=False):
 lines = open("../inputs/day_17.txt", "r").read().splitlines()
 input = lines[0]
 # input = '>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>'
+initial, initial_top, period, addition = calculate_height(input, limit=200, find_period=True)
+
+def get_result(limit):
+    periods_count = (limit - initial) // period
+    odd = limit - initial - period * periods_count
+    return calculate_height(input, limit=odd + initial)[0] + addition * periods_count
 
 # Part I
-print("Part I", calculate_height(input, limit=2022)[0])
+print("Part I", get_result(2022))
 
 # Part II
-initial, initial_top, period, addition = calculate_height(input, limit=4000, find_period=True)
-max_to_check = 1000000000000
-periods_count = (max_to_check - initial) // period
-odd = max_to_check - initial - period * periods_count
-print("Part II", calculate_height(input, limit=odd+initial)[0] + addition * periods_count)
+print("Part II", get_result(1000000000000))
