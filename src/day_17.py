@@ -29,11 +29,11 @@ class Figure:
 
         return len(set.intersection(position_set, self.chamber)) == 0
 
-def calculate_height(input, limit, initial_command_index = 0):
+def calculate_height(input, limit, find_period=False):
     shape_index = 0
     chamber = set()
     current_figure = None
-    command_index = initial_command_index
+    command_index = 0
     figures_count = 0
     shape_command_set = {}
     while figures_count < limit:
@@ -42,14 +42,14 @@ def calculate_height(input, limit, initial_command_index = 0):
             current_top = max(point[1] for point in chamber) + 1 if len(chamber) > 0 else 0
             current_figure = Figure(shape_index, chamber, current_top)
             shape_index = (shape_index + 1) % len(shapes)
-            top_xs = [point[0] for point in chamber if point[1] == current_top]
-            # if shape_index == 0 and (2 in top_xs or 3 in top_xs or 4 in top_xs):
-            #     if (shape_index, command_index) not in shape_command_set:
-            #         shape_command_set[(shape_index, command_index)] = figures_count, current_top + 1
-            #     else:
-            #         print(f"STOP!!!! prev={shape_command_set[(shape_index, command_index)]} figures_count={figures_count}, current_top={current_top + 1},"
-            #               f" current_command={command_index}")
-                    # break
+            top_xs = [point[0] for point in chamber if point[1] == current_top - 1]
+            if shape_index == 0 and (2 in top_xs or 3 in top_xs or 4 in top_xs) and find_period:
+                if (shape_index, command_index) not in shape_command_set:
+                    shape_command_set[(shape_index, command_index)] = figures_count, current_top
+                else:
+                    initial, initial_top = shape_command_set[(shape_index, command_index)]
+
+                    return initial, initial_top, figures_count - initial, current_top - initial_top
         success, new_shape = current_figure.move(input[command_index])
         if success:
             current_figure.shape = new_shape
@@ -60,73 +60,23 @@ def calculate_height(input, limit, initial_command_index = 0):
             chamber.update(set(new_shape))
             current_figure = None
             figures_count = figures_count + 1
-            # if figures_count % 10 == 0:
-            #     y_max = max(point[1] for point in chamber)
-            #     chamber = set([point for point in chamber if point[1] + 50 > y_max])
+            if figures_count % 10 == 0:
+                y_max = max(point[1] for point in chamber)
+                chamber = set([point for point in chamber if point[1] + 50 > y_max])
 
-            # if figures_count >= 2014:
-            #     print(figures_count, command_index, max(point[1] for point in chamber) + 1)
         command_index = (command_index + 1) % len(input)
     return max(point[1] for point in chamber) + 1, chamber
 
 lines = open("../inputs/day_17.txt", "r").read().splitlines()
 input = lines[0]
-input = '>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>'
+# input = '>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>'
 
-# max_to_check = 1000000000000
-# x = calculate_height(input, limit=2022)
-# print("-----")
-result, chamber = calculate_height(input, limit=2022)
-print("limit=2022", result)
+# Part I
+print("Part I", calculate_height(input, limit=2022)[0])
 
-y_begin = max(point[1] for point in chamber)
-y_begin = 10
-for y in range(y_begin, y_begin-11, -1):
-    print(f'{y}|', end='')
-    for x in range(7):
-        if (x, y) in chamber: print('#', end='')
-        else: print('.', end='')
-    print('|')
-
-# |..@@@@.|
-# |.......|
-# |.......|
-# |.......|
-# |....#..|
-# |....#..|
-# |....##.|
-# |##..##.|
-# |######.|
-# |.###...|
-# |..#....|
-# |.####..|
-# |....##.|
-# |....##.|
-# |....#..|
-# |..#.#..|
-# |..#.#..|
-# |#####..|
-# |..###..|
-# |...#...|
-# |..####.|
-# +-------+
-
-
-# |....#..|
-# |....#..|
-# |....##.|
-# |##..##.|
-# |######.|
-# |.###...|
-# |..#....|
-# |.####..|
-# |....##.|
-# |....##.|
-# |....#..|
-# |..#.#..|
-# |..#.#..|
-# |#####..|
-# |..###..|
-# |...#...|
-# |..####.|
-# +-------+
+# Part II
+initial, initial_top, period, addition = calculate_height(input, limit=4000, find_period=True)
+max_to_check = 1000000000000
+periods_count = (max_to_check - initial) // period
+odd = max_to_check - initial - period * periods_count
+print("Part II", calculate_height(input, limit=odd+initial)[0] + addition * periods_count)
