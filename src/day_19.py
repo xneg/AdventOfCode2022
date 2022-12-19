@@ -108,13 +108,17 @@ def get_outcomes_array(initial_minerals, blueprint):
 def calculate(blueprint, initial_robots, initial_minerals, time_limit):
     results = []
     intermediate = {}
+
+    def calculate_value(robots, minerals):
+        return [x*10 + y for x, y in zip(robots, minerals)]
+        # return minerals[0] + minerals[1]*10 + minerals[2]*100 + minerals[3]*1000
     def calculate_step(blueprint, robots, minerals, time):
         if time >= time_limit:
             results.append((robots, minerals))
             return
         outcomes = get_outcomes_array(initial_minerals=minerals, blueprint=blueprint)
         produced_minerals = robots
-        print("outcomes", robots, minerals, len(outcomes))
+        outcomes = sorted(outcomes, key=lambda x: calculate_value(*x), reverse=True)[:5]
         for produced_robots, remaining_minerals in outcomes:
             new_robots = [x + y for x, y in zip(robots, produced_robots)]
             new_minerals = [x + y for x, y in zip(produced_minerals, remaining_minerals)]
@@ -129,34 +133,34 @@ def calculate(blueprint, initial_robots, initial_minerals, time_limit):
 
     intermediate[(0, tuple(initial_robots))] = set([tuple(initial_minerals)])
     while len(intermediate) > 0:
+        print(len(intermediate))
         min_time = min(k[0] for k in intermediate.keys())
         key, value = [(key, value) for key, value in intermediate.items() if key[0] == min_time][0]
         del intermediate[key]
-        print(min_time, len(value))
+
+        my_time, robots = key
         most_vectors = []
         for item in value:
             need_add = True
             for other in value:
-                if min([x - y for x, y in zip(item, other)]) < 0:
+                if item != other and max([x - y for x, y in zip(item, other)]) <= 0:
                     need_add = False
                     break
             if need_add:
                 most_vectors.append(item)
 
-        start_time = time.time()
         for minerals in most_vectors:
-            my_time, robots = key
             calculate_step(blueprint, robots, minerals, my_time)
-        print("calc %s seconds ---" % (time.time() - start_time))
     return results
 
 # print(calculate(blueprints_array[0], [1, 0, 0, 0], [0, 0, 0, 0], 6))
 # exit()
 
+# 18 - 164
 results = calculate(blueprints_array[0], [1, 0, 0, 0], [0, 0, 0, 0], 20) # 661
 # current_combo = [(key, len(list(group))) for key, group in groupby(sorted(acc + [robot]))]
 # b = [(k, list(list(zip(*g))[1])) for k, g in groupby(a, itemgetter(0))]
-print(results)
+# print(results)
 print(len(results))
 bb = [(k, list(list(zip(*g))[1])) for k, g in groupby(sorted(results), itemgetter(0))]
 for b in bb:
