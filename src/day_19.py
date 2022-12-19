@@ -59,6 +59,7 @@ def get_all_outcomes(initial_minerals, blueprint):
     get_all_possible_purchases(minerals = initial_minerals, blueprint=blueprint, acc=[])
     return combo + [([], initial_minerals)]
 
+
 def produce_minerals(robots):
     robot_mineral_map = {"ore_robot": "ore", "clay_robot": "clay", "obsidian_robot": "obsidian", "geode_robot": "geode"}
     return Counter({robot_mineral_map[robot]: count for robot, count in robots.items()})
@@ -105,65 +106,85 @@ def get_outcomes_array(initial_minerals, blueprint):
     get_all_possible_purchases(minerals = initial_minerals, blueprint=blueprint, acc=[0, 0, 0, 0])
     return combo + [([0, 0, 0, 0], initial_minerals)]
 
+
+def get_simple_purchases(minerals, blueprint):
+    result = []
+    for robot_idx, robot_price in enumerate(blueprint):
+        remaining_minerals = [x - y for x, y in zip(minerals, robot_price)]
+        if min(remaining_minerals) >= 0:
+            result.append(([0 if i != robot_idx else 1 for i in range(4)], remaining_minerals))
+    return result + [([0, 0, 0, 0], minerals)]
+
 def calculate(blueprint, initial_robots, initial_minerals, time_limit):
     results = []
-    intermediate = {}
+    intermediate = set()
 
-    def calculate_value(robots, minerals):
-        return [x*10 + y for x, y in zip(robots, minerals)]
-        # return minerals[0] + minerals[1]*10 + minerals[2]*100 + minerals[3]*1000
+    def calculate_value(remaining_time, robots, minerals):
+        # return x[0] * 4 + y[0] + x[1] * 2 + y[1] * 2 + x[2] * 11 + y[2] * 11 + x[3] * 1000
+        # return x[0] * 10 + y[0] + x[1] * 100 + y[1] * 10 + x[2] * 1000 + y[2] * 100 + x[3] * 100000
+
+        # Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.
+        return minerals[0] + 2 * minerals[1] + 31 * minerals[2] + (2 + 7 * 31) * minerals[3] + \
+            (robots[0] + 2 * robots[1] + 31 * robots[2] + (2 + 7 * 31) *robots[3]) * remaining_time
+
+        # Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian.
+        # return minerals[0] + 3 * minerals[1] + (3 + 8 * 3) * minerals[2] + (3 + 12 * (3 + 8 * 3)) * minerals[3] + \
+        #     (robots[0] + 3 * robots[1] + (3 + 8 * 3) * robots[2] + (3 + 12 * (3 + 8 * 3)) * robots[3]) * remaining_time
     def calculate_step(blueprint, robots, minerals, time):
         if time >= time_limit:
             results.append((robots, minerals))
             return
-        outcomes = get_outcomes_array(initial_minerals=minerals, blueprint=blueprint)
+        outcomes = get_simple_purchases(minerals, blueprint)
         produced_minerals = robots
-        outcomes = sorted(outcomes, key=lambda x: calculate_value(*x), reverse=True)[:5]
+        # outcomes = sorted(outcomes, key=lambda x: calculate_value(time_limit = time, *x), reverse=True)#[:5]
         for produced_robots, remaining_minerals in outcomes:
             new_robots = [x + y for x, y in zip(robots, produced_robots)]
             new_minerals = [x + y for x, y in zip(produced_minerals, remaining_minerals)]
-            add_intermidiate(time + 1, new_robots, new_minerals)
+            intermediate.add((time + 1, tuple(new_robots), tuple(new_minerals)))
+
+    def pop(container, cond):
+        try:
+            value = next(filter(cond, container))
+            container.remove(value)
+            return value
+        except StopIteration:
+            raise Exception("No Value to pop")
 
     import time
-    def add_intermidiate(time, robots, minerals):
-        if (time, tuple(robots)) not in intermediate:
-            intermediate[(time, tuple(robots))] = set([tuple(minerals)])
-        else:
-            intermediate[(time, tuple(robots))].add(tuple(minerals))
-
-    intermediate[(0, tuple(initial_robots))] = set([tuple(initial_minerals)])
+    current_time = 0
+    intermediate.add((0, tuple(initial_robots), tuple(initial_minerals)))
     while len(intermediate) > 0:
-        print(len(intermediate))
-        min_time = min(k[0] for k in intermediate.keys())
-        key, value = [(key, value) for key, value in intermediate.items() if key[0] == min_time][0]
-        del intermediate[key]
-
-        my_time, robots = key
-        most_vectors = []
-        for item in value:
-            need_add = True
-            for other in value:
-                if item != other and max([x - y for x, y in zip(item, other)]) <= 0:
-                    need_add = False
-                    break
-            if need_add:
-                most_vectors.append(item)
-
-        for minerals in most_vectors:
-            calculate_step(blueprint, robots, minerals, my_time)
+        min_time = min(k[0] for k in intermediate)
+        if min_time != current_time:
+            current_time = min_time
+            # intermediate = set(sorted(intermediate, key=lambda x: calculate_value(x[1], x[2]), reverse=True))
+            # intermediate = set(sorted(intermediate, key=lambda x: calculate_value(time_limit - current_time, x[1], x[2]), reverse=True)[:100])
+            # bb = [(k, list(list(zip(*g))[2])) for k, g in groupby(sorted(intermediate), itemgetter(1))]
+            # print("bb", min_time)
+            # for b in bb:
+            #     print(b)
+        time, robots, minerals = pop(intermediate, lambda x: x[0] == min_time) #intermediate.pop()
+        # print(time)
+        calculate_step(blueprint, robots, minerals, time)
     return results
 
 # print(calculate(blueprints_array[0], [1, 0, 0, 0], [0, 0, 0, 0], 6))
 # exit()
 
 # 18 - 164
-results = calculate(blueprints_array[0], [1, 0, 0, 0], [0, 0, 0, 0], 20) # 661
+# Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian.
+results = calculate(blueprints_array[0], [1, 0, 0, 0], [0, 0, 0, 0], 15) # 661
+print(results)
 # current_combo = [(key, len(list(group))) for key, group in groupby(sorted(acc + [robot]))]
 # b = [(k, list(list(zip(*g))[1])) for k, g in groupby(a, itemgetter(0))]
 # print(results)
-print(len(results))
-bb = [(k, list(list(zip(*g))[1])) for k, g in groupby(sorted(results), itemgetter(0))]
-for b in bb:
-    print(b)
-print(len(bb))
+# print(len(results))
+# print(results)
+# bb = [(k, list(list(zip(*g))[1])) for k, g in groupby(sorted(results), itemgetter(0))]
+bb = [(list(list(zip(*g))[1])) for k, g in groupby(sorted(results), itemgetter(0))]
+
+print(max([item[3] for sublist in bb for item in sublist]))
+# for b in bb:
+#     print(b)
+# print(len(bb))
 # print [list(g[1]) for g in groupby(sorted(results, key=len), len)]
