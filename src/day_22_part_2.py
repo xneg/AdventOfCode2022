@@ -34,31 +34,38 @@ for block in chunker(lines[:-2], size):
 for idx, surface in enumerate(surfaces):
     surface.number = idx
 
-half_neighbors = {
-    (0, "U"): (5, "L"),
-    (0, "R"): (1, "L"),
-    (0, "D"): (2, "U"),
-    (0, "L"): (3, "L"),
+neighbors = {
+    (0, 'U'): (2, 'U'),
+    (0, 'D'): (5, 'L'),
+    (0, 'L'): (1, 'L'),
+    (0, 'R'): (3, 'L'),
 
-    (1, "U"): (5, "D"),
-    (1, "R"): (4, 'R'),
-    (1, 'D'): (2, 'R'),
+    (1, 'U'): (2, 'R'),
+    (1, 'D'): (5, 'D'),
+    (1, 'L'): (4, 'R'),
+    (1, 'R'): (0, 'R'),
 
-    (2, 'D'): (4, 'U'),
-    (2, 'L'): (3, 'U'),
+    (2, 'U'): (4, 'U'),
+    (2, 'D'): (0, 'D'),
+    (2, 'L'): (1, 'D'),
+    (2, 'R'): (3, 'U'),
 
-    (3, 'R'): (4, 'L'),
-    (3, 'D'): (5, 'U'),
+    (3, 'U'): (5, 'U'),
+    (3, 'D'): (2, 'L'),
+    (3, 'L'): (4, 'L'),
+    (3, 'R'): (0, 'L'),
 
-    (4, 'D'): (5, 'R')
+    (4, 'U'): (5, 'R'),
+    (4, 'D'): (2, 'D'),
+    (4, 'L'): (1, 'R'),
+    (4, 'R'): (3, 'R'),
+
+    (5, 'U'): (1, 'U'),
+    (5, 'D'): (3, 'D'),
+    (5, 'L'): (4, 'D'),
+    (5, 'R'): (0, 'U'),
 }
 
-neighbors = {}
-for key, value in half_neighbors.items():
-    neighbors[key] = value
-    neighbors[value] = key
-
-print(neighbors)
 
 rotation = {"L": lambda x, y: (size - y - 1, x), "R": lambda x, y: (y, size - x - 1)}
 def move(x, y, current_surface, surface_direction):
@@ -84,7 +91,8 @@ def get_next_direction(current_direction, rotation):
 y = 0
 x = 0
 current_surface = surfaces[0]
-direction = 'R'
+direction = 'L'
+x, y = rotation[direction](x, y)
 
 rotations = [c for c in lines[-1] if c in ('R', 'L')]
 steps = [int(steps) for steps in re.split('L|R', lines[-1])]
@@ -107,5 +115,11 @@ for steps_count in steps:
         x, y = rotation[current_rotation](x, y)
         direction = get_next_direction(direction, current_rotation)
         rotations_idx = rotations_idx + 1
-    print(x, y, direction)
-    # print((x + 1) * 4 + (y + 1) * 1000 + facing_cost[direction])
+    print(x, y, direction, current_surface.number)
+
+x, y = rotation["R"](x, y)
+direction =  get_next_direction(direction, "R")
+
+facing_cost = {"R": 0, "D": 1, "L": 2, "U": 3}
+print(x, y, direction, current_surface.number)
+print((x + 1) * 4 + (y + 1 + size * 2) * 1000 + facing_cost["R"])
