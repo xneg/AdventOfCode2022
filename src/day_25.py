@@ -4,23 +4,25 @@ def from_snafu(snafu_str):
 
 def to_snafu(value):
     snafu_map = {-2: '=', -1: '-', 0: '0', 1: '1', 2: '2'}
+    intermediate = []
+    while value > 0:
+        value, remainder = divmod(value, 5)
+        intermediate.append(remainder)
+
     result = []
-    current = value
-    skip_nulls = 0
-    while current > 0:
-        next, remainder = divmod(current, 5)
-        if remainder == 0 and skip_nulls > 0:
-            current = next
-            skip_nulls = skip_nulls - 1
-            continue
-        if remainder <= 2:
-            result.append(remainder)
-            current = next
+    acc = 0
+
+    for i in intermediate:
+        current = i + acc
+        if current <= 2:
+            result.append(current)
+            acc = 0
         else:
-            result.append(remainder - 5)
-            current = current + (5 - remainder)
-            skip_nulls = skip_nulls + 1
+            result.append(current - 5)
+            acc = 1
+    if acc != 0: result.append(acc)
     return list(reversed([snafu_map[r] for r in result]))
+
 
 lines = open("../inputs/day_25.txt", "r").read().splitlines()
 
